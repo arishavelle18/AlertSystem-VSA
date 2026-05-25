@@ -1,1 +1,8 @@
-
+name: Github Actions Demo
+run-name: ${{ github.actor }} is testing out Github Actions  🚀
+"on": [push]
+jobs:
+  Explore-GitHub-Actions:
+    runs-on: ubuntu-latest
+    steps:
+      - run:  echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
