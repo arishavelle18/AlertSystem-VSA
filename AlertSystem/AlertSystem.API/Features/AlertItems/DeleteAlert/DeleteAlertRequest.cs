@@ -1,4 +1,5 @@
 ﻿using AlertSystem.API.Common.Database;
+using AlertSystem.API.Common.Exceptions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,7 +14,7 @@ internal sealed class DeleteAlertHandler(AppDbContext appDbContext) : IRequestHa
     {
         var getData = await appDbContext.AlertItems.FirstOrDefaultAsync(a => a.Id == request.Id, cancellationToken);
         if (getData is null)
-            throw new Exception("Not found with the given credentials");
+            throw new NotFoundException("Not found with the given credentials");
         appDbContext.Remove(getData);
         await appDbContext.SaveChangesAsync(cancellationToken);
 

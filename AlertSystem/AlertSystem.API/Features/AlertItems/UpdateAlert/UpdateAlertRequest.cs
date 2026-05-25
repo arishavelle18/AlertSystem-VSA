@@ -1,4 +1,6 @@
 ﻿using AlertSystem.API.Common.Database;
+using AlertSystem.API.Common.Exceptions;
+using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -6,6 +8,16 @@ namespace AlertSystem.API.Features.AlertItems.UpdateAlert;
 
 public record UpdateAlertRequest(Guid Id, UpdateAlertRequestModel UpdateAlertRequestModel) : IRequest<UpdateAlertResponse>;
 public record UpdateAlertRequestModel(string Title, string Description, DateOnly ExpiryDate, bool IsNotified, int NotificationLeadDate);
+
+public class UpdateAlertRequestValidator : AbstractValidator<UpdateAlertRequest>
+{
+    public UpdateAlertRequestValidator()
+    {
+        RuleFor(x => x.UpdateAlertRequestModel.Title).NotEmpty().WithMessage("Title is required.");
+        RuleFor(x => x.UpdateAlertRequestModel.Description).NotEmpty().WithMessage("Description is required.");
+    }
+}
+
 public record UpdateAlertResponse(Guid Id);
 
 internal sealed class UpdateAlertRequestHandler(AppDbContext appDbContext) : IRequestHandler<UpdateAlertRequest, UpdateAlertResponse>
@@ -14,12 +26,12 @@ internal sealed class UpdateAlertRequestHandler(AppDbContext appDbContext) : IRe
     {
         var getAlertItem = await appDbContext.AlertItemView.FirstOrDefaultAsync(a => a.Id == request.Id, cancellationToken);
         if (getAlertItem is null)
-            throw new Exception("Not found with the given credentials");
+            throw new NotFoundException("Not found with the given credentials");
 
         //check if the alert item title is being updated to a title that already exists for another alert item
         var checkIfTitleExists = await appDbContext.AlertItemView.FirstOrDefaultAsync(a => a.Title == request.UpdateAlertRequestModel.Title && a.Id != request.Id, cancellationToken);
-        if(checkIfTitleExists is not null)
-            throw new Exception($"w{request.UpdateAlertRequestModel.Title} is already existing");
+        if (checkIfTitleExists is not null)
+            throw new BadRequestException($"w{request.UpdateAlertRequestModel.Title} is already existing");
 
         getAlertItem.Update(request.UpdateAlertRequestModel.Title, request.UpdateAlertRequestModel.Description, request.UpdateAlertRequestModel.ExpiryDate, request.UpdateAlertRequestModel.IsNotified, request.UpdateAlertRequestModel.NotificationLeadDate);
         appDbContext.Update(getAlertItem);

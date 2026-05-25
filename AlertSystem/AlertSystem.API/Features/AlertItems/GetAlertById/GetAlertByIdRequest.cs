@@ -1,4 +1,5 @@
 ﻿using AlertSystem.API.Common.Database;
+using AlertSystem.API.Common.Exceptions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,7 +14,7 @@ internal sealed class GetAlertByIdRequestHandler(AppDbContext appDbContext) : IR
     {
         var alertItem = await appDbContext.AlertItemView.FirstOrDefaultAsync(a => a.Id == request.Id, cancellationToken);
         if (alertItem is null)
-            throw new Exception($"Alert with id {request.Id} is not found");
+            throw new NotFoundException($"Alert with id {request.Id} is not found");
         return new GetAlertByIdResponse(
             alertItem.Id,
             alertItem.Title,
